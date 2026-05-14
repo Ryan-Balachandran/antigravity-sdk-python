@@ -28,10 +28,16 @@ Covers:
 from typing import Any
 import unittest
 
+import pydantic
 from google.antigravity import types
-from google.antigravity.examples import example_policies
 from google.antigravity.hooks import hooks
 from google.antigravity.hooks import policy
+
+
+class RunCommandArgs(pydantic.BaseModel):
+  """Arguments for run_command tool."""
+
+  command_line: str
 
 
 def _make_tool_call(name: str = "run_command", **args: Any) -> types.ToolCall:
@@ -345,7 +351,7 @@ class PredicateTest(unittest.IsolatedAsyncioTestCase):
 
     """Predicate expecting a Pydantic model receives the parsed object."""
 
-    def my_typed_predicate(args: example_policies.RunCommandArgs) -> bool:
+    def my_typed_predicate(args: RunCommandArgs) -> bool:
       return "rm" in args.command_line
 
     hook = policy.enforce([
