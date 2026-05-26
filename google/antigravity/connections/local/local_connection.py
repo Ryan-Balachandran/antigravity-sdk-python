@@ -93,6 +93,7 @@ _STATUS_MAP = {
     "STATE_DONE": types.StepStatus.DONE,
     "STATE_WAITING_FOR_USER": types.StepStatus.WAITING_FOR_USER,
     "STATE_ERROR": types.StepStatus.ERROR,
+    "STATE_TERMINAL_ERROR": types.StepStatus.TERMINAL_ERROR,
 }
 
 # Map from BuiltinTools enum to the proto field name on StepUpdate.
@@ -322,7 +323,9 @@ class LocalConnectionStep(types.Step):
           )
 
     error_field = step_dict.get("error", {})
-    error_msg = error_field.get("error_message", "")
+    error_msg = error_field.get("error_message")
+    if not error_msg:
+      error_msg = step_dict.get("error_message", "")
     http_code = error_field.get("http_code", 0)
 
     return cls(
@@ -591,6 +594,7 @@ class LocalConnection(connection.Connection):
         is_terminal = is_done or step_obj.status in (
             types.StepStatus.ERROR,
             types.StepStatus.CANCELED,
+            types.StepStatus.TERMINAL_ERROR,
         )
         is_target_user = getattr(step_obj, "target", None) == "TARGET_USER"
 
@@ -604,6 +608,11 @@ class LocalConnection(connection.Connection):
           # Don't force idle here — wait for the TrajectoryStateUpdate
           # path to confirm that the parent and all subagent trajectories
           # have completed.
+
+        if step_obj.status == types.StepStatus.TERMINAL_ERROR:
+          raise types.AntigravityExecutionError(
+              step_obj.error or "Terminal error occurred during execution"
+          )
     finally:
       self._is_receiving = False
 

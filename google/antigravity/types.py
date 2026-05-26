@@ -62,6 +62,7 @@ __all__ = [
     "AskQuestionInteractionSpec",
     "AntigravityConnectionError",
     "AntigravityValidationError",
+    "AntigravityExecutionError",
     "TriggerDelivery",
     "FileChangeKind",
     "FileChange",
@@ -600,6 +601,7 @@ class StepStatus(str, enum.Enum):
   WAITING_FOR_USER = "WAITING_FOR_USER"
   ERROR = "ERROR"
   CANCELED = "CANCELED"
+  TERMINAL_ERROR = "TERMINAL_ERROR"
   UNKNOWN = "UNKNOWN"
 
 
@@ -731,6 +733,14 @@ class AntigravityConnectionError(Exception):
 
   Raised when a connection to an agent backend cannot be established or
   encounters a fatal protocol-level error.
+  """
+
+
+class AntigravityExecutionError(Exception):
+  """Raised when the agent execution encounters a terminal error.
+
+  This indicates that the agent loop has terminated due to a fatal error
+  (e.g. model call failure, system constraint violation) and cannot continue.
   """
 
 
